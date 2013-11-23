@@ -13,7 +13,17 @@ rbf_kernel <- function(x1,x2,gamma){
 	K<-exp(-gamma*rowSums((x1-x2)^2))
 }
 
+#These are vectorized versions of the above functiosn that take a matrix as the input
+#I learned how to vectorize the RBF funtion in Anderw Ng's "Machine Learning" Coursera course
+RBF_kern<-function(X,gamma){
+		x<-t(apply(X^2,1,sum))
+		X<-sweep(sweep(-2*X%*%t(X),2,x,FUN="+"),1,x,FUN="+")
+		return(exp(-gamma*X))
+}
 
+Poly_kern<-function(X,alpha,beta,d){
+		return((alpha*X%*%t(X)+beta)^d)
+}
 
 # soft/hard-margin svm with rbf kernel
 # FIXME: the QP function can't get a solution for some data when C is set
@@ -21,7 +31,8 @@ rbf_svmtrain <- function(X,Y,C=Inf, gamma=1.5,esp=1e-10){
 	N<-length(Y)
 	
 	Dm<-matrix(0,N,N)
-	# TODO: is there a way to avoid these stupid loops???
+	#TODO: is there a way to avoid these stupid loops???
+	#you can rplace this four loop with the RBF_kern function
 	for(i in 1:N){
 		for(j in 1:N){
 			Dm[i,j]<-Y[i]*Y[j]*rbf_kernel(matrix(X[i,],1),matrix(X[j,],1),gamma)
